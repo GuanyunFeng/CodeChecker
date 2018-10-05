@@ -6,6 +6,12 @@ pattern = re.compile(r'((?:const[ \t\*]+)?(?:void|int|char|long|double|float|uns
 ```
 对读取的c语言代码进行匹配，代码如下：
 ```Python
+'''
+    input:
+        filepath:要分析的c代码路径（包括文件名），字符串
+    output:
+        group:获得的函数列表
+'''
 def get_c_functions(filepath):
     f = open(filepath, "r")
     str = f.read()
@@ -16,6 +22,13 @@ def get_c_functions(filepath):
 
 ## 2.在函数体中查找已知的函数名,并使用pygraphviz绘制出cfg图。
 ```Python
+'''
+    input:
+        names: 函数名称，列表
+        functions：函数名称和对应的函数体，字典
+    output:
+        在当前文件夹下生成“cfg.png”,并且在命令行中打印函数调用
+'''
 def get_cfg_graph(c_group):
     names = []
     functions = {}
