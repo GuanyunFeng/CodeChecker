@@ -120,4 +120,41 @@ class para_array(para_pointer):
         self.value = []
         self.is_on_heap = False
 
+
+
+
+class para_string(para_array):
+    def __init__(self, typename, name):
+        super(para_string, self).__init__(typename, name)
+        self.valid_len = 0
+        self.size = 1
+        self.size_total = -1 #对于字符串，size_total与length含义相同，不使用这一属性
     
+
+    def set_length(self, len):
+        self.length = len
+
+
+    def cpy_string(self, string):
+        if len(string) + 1 > self.length:
+            if self.is_on_heap:
+                print("heap overflow!")
+            else:
+                print("stack overflow!")
+            return False
+        else:
+            self.value = list(string)
+            self.valid_len = len(string)
+
+    
+    def cat_string(self, string):
+        if len(string) + len(self.value) + 1 > self.length:
+            if self.is_on_heap:
+                print("heap overflow!")
+            else:
+                print("stack overflow!")
+            return False
+        else:
+            self.value = self.value + list(string)
+            self.valid_len += len(string)
+

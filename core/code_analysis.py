@@ -13,11 +13,6 @@ functions = {}
 
 pattern = re.compile(r'((?:const[ \t\*]+)?(?:void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{[^{}]*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})', re.S)
 
-class parameter:
-    para_type = ""
-    para_name = ""
-    is_arry = False
-    arry_len = 0
 
 def get_functions(filepath):
     f = open(filepath, "r")
