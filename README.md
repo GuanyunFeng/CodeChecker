@@ -1,6 +1,6 @@
 # CodeChecker
 ## 环境依赖及安装方法
-Ubuntu18.04+Python3.6.5+pyqt5+pygraphviz+ply
+测试环境：Ubuntu18.04+Python3.6.5+pyqt5+pygraphviz+ply<\br>
 仅在python3环境下进行测试，python2不一定能够正常运行。
 ### PyQt5安装
 直接使用pip安装
