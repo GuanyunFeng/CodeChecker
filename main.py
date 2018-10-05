@@ -104,10 +104,16 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
 
     def cmp_str(self):
+        match_list = []
         self.w = cmpwindow()
         self.w.show()
         self.w.set_list(self.sample_filenames)
         self.w.set_target(self.target_filename)
+        path1 = self.target_dir + '\\' + self.target_filename #目标文件
+        for file in self.sample_filenames:
+            path2 = self.sample_dir + '\\' + file #比较的目标文件
+        matcher = file_cmp(path1, path2)
+        
     
 
     def open_dir(self):

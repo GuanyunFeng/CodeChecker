@@ -4,6 +4,8 @@ from abc import *
 
 class parameter():
     __metaclass__ = ABCMeta
+
+
     def __init__(self, typename, name):
         self.size = -1       #单元大小，如int指针为4
         self.type_name = typename #指针类型名
@@ -22,6 +24,17 @@ class parameter():
             self.size = 1
         elif self.type_name == "long long":
             self.size = 8
+
+
+    @abstractmethod
+    def initializ(self):
+        pass
+
+
+    @abstractmethod
+    def set_value(self):
+        pass
+
 
 
 
@@ -74,12 +87,37 @@ class pare_num(parameter):
     def __init__(self, typename, name):
         super(pare_num, self).__init__(typename, name)
         self.value = 0
-        self.is_signed = False
-        
+        self.is_signed = True
+        self.max = 0
+        self.min = 0
+
+        if (self.type_name == "unsigned" or
+            self.type_name == "unsigned long" or
+            self.type_name == "unsigned int" or
+            self.type_name == "unsigned short" or
+            self.type_name == "unsigned char"):
+            self.is_signed = False
+            self.min = 0
+            self.max = pow(2, self.size * 8) - 1
+        else:
+            self.is_signed = True
+            self.min = - pow(2, self.size * 8 - 1) + 1
+            self.max = pow(2, sefl.size * 8 -1) - 1
+
+
+    def set_value(self, num):
+        if (num < self.min or num > self.max):
+            return False
+        self.value = num
+        False
+            
 
 
 
 class para_array(para_pointer):
-    def __init__(self):
+    def __init__(self, typename, name):
+        super(para_array, self).__init__(typename, name)
         self.value = []
         self.is_on_heap = False
+
+    
