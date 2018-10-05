@@ -42,17 +42,12 @@ def get_cfg_graph(c_group):
         graph.add_node(name)
 
     for (key, value) in functions.items():
-        #print("function #" + key + "# has call function:")
         flag = False
         for name in names:
             result = value.find(name + "(")
             if result !=-1:
                 flag = True
                 graph.add_edge(key, name)
-                #print("    " + name)
-        #if flag == False:
-            #print("    none")
-        #print(" ")
     graph.layout(prog='dot')    
     graph.draw("tmp/cfg.png")
 ```
