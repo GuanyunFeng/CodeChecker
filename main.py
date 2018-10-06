@@ -9,9 +9,11 @@ from mainwindow import Ui_MainWindow
 from viewpic import Ui_ViewPic
 from cmpwindow import Ui_cmpwindow
 from core.pre_compile import *
-from core.code_cmp import *
-from core.code_cmp_cfg import *
-from core.code_analysis import *
+from core.compare_str import *
+from core.compare_cfg import *
+from core.analysis import *
+#from core.function import *
+#from core.para_types import *
 
 class cmpwindow(QtWidgets.QWidget, Ui_cmpwindow):
     def __init__(self):

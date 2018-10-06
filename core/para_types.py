@@ -12,15 +12,15 @@ class parameter():
         self.name = name #变量名
 
         if (self.type_name == "int" or 
-            self.type_name = "unsigned" or
+            self.type_name == "unsigned" or
             self.type_name == "long" or
-            self.type_name = "unsigned long"):
+            self.type_name == "unsigned long"):
             self.size = 4
         elif (self.type_name == "short" or 
-            self.type_name = "unsigned short"):
+            self.type_name == "unsigned short"):
             self.size = 2
         elif (self.type_name == "char" or 
-            self.type_name = "unsigned char"):
+            self.type_name == "unsigned char"):
             self.size = 1
         elif self.type_name == "long long":
             self.size = 8
@@ -145,6 +145,7 @@ class para_string(para_array):
         else:
             self.value = list(string)
             self.valid_len = len(string)
+            return True
 
     
     def cat_string(self, string):
@@ -157,4 +158,5 @@ class para_string(para_array):
         else:
             self.value = self.value + list(string)
             self.valid_len += len(string)
+            return True
 

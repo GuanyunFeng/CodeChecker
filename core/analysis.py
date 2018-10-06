@@ -5,29 +5,24 @@ import os
 import sys
 from graphviz import Digraph
 import pygraphviz as gv
+from .function import *
+from .para_types import *
 
 
-names = []
-group = []
-functions = {}
 
 pattern = re.compile(r'((?:const[ \t\*]+)?(?:void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{[^{}]*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})', re.S)
 
 
-def get_functions(filepath):
+def get_c_functions(filepath):
     f = open(filepath, "r")
     str = f.read()
     f.close()
-    group = pattern.findall(str)
-    #print(group)
-    for g in group:
-        names.append(g[1])
-        functions[g[1]] = g[3]
-        #print(g[3]) #函数名
-        #print(g[5]) #函数体
+    c_group = c_pattern.findall(str)
+    functions = func_list(c_group)
+    return functions
 
 
-def check_num_overflow(function):
+def check_num_overflow(functions):
     declarations = []
     int_parameters = []
     #获取int相关变量
@@ -38,7 +33,7 @@ def check_num_overflow(function):
     para_pattern = re.compile(r'j')
 
 
-def check_stack_overflow(function):
+def check_stack_overflow(functions):
     declarations = []
     char_arrys = []
     #获取char[]相关变量
@@ -65,11 +60,20 @@ def check_heap_overflow(function):
     pass
 
 
+def scan_suspicious(function):
+    key_word = ["strcpy", "strncpy", "memcpy", "memncpy", "strcat", "strncat",
+    "sprintf", "vsprintf","gets", "getchar", "fgetc", "getc",
+    "read","sscanf", "fscanf", "vfscanf", "vscanf", "vsscanf"]
+
+
+def scan_global_var(code):
+    pass
+
+
+def scan_local_var(function):
+    pass
 
 #get_functions(filename)
 #get_call_relationship(names, functions)
 
-for (key, value) in functions.items():
-    print(value)
-    check_stack_overflow(value)
-    print("")
+

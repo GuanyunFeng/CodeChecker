@@ -5,8 +5,9 @@ import os
 import sys
 import pygraphviz as gv
 import difflib
+from .function import *
 
-c_pattern = re.compile(r'((?:const[ \t\*]+)?(?:void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{[^{}]*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})', re.S)
+c_pattern = re.compile(r'((?:const[ \t\*]+)?(void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{[^{}]*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})', re.S)
 
 '''
     input:
@@ -19,7 +20,9 @@ def get_c_functions(filepath):
     str = f.read()
     f.close()
     c_group = c_pattern.findall(str)
-    return c_group
+    functions = func_list(c_group)
+    return functions
+
 
 '''
     input:
@@ -28,30 +31,17 @@ def get_c_functions(filepath):
     output:
         在当前文件夹下生成“cfg.png”,并且在命令行中打印函数调用
 '''
-def get_cfg_graph(c_group):
-    names = []
-    functions = {}
-    for g in c_group:
-        names.append(g[1])
-        functions[g[1]] = g[3]
-
+def get_cfg_graph(functions):
     graph = gv.AGraph(directed=True)
-
-    for name in names:
+    for name in functions.names():
         graph.add_node(name)
-
-    for (key, value) in functions.items():
-        #print("function #" + key + "# has call function:")
+    for f in functions:
         flag = False
-        for name in names:
-            result = value.find(name + "(")
+        for name in functions.names():
+            result = f.func.find(name + "(")
             if result !=-1:
                 flag = True
-                graph.add_edge(key, name)
-                #print("    " + name)
-        #if flag == False:
-            #print("    none")
-        #print(" ")
+                graph.add_edge(f.name, name)
     graph.layout(prog='dot')    
     graph.draw("tmp/cfg.png")
 
