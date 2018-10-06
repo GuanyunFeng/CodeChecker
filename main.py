@@ -11,7 +11,7 @@ from cmpwindow import Ui_cmpwindow
 from core.pre_compile import *
 from core.compare_str import *
 from core.compare_cfg import *
-from core.analysis import *
+#from core.analysis import *
 #from core.function import *
 #from core.para_types import *
 

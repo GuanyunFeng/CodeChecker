@@ -21,6 +21,9 @@ def get_c_functions(filepath):
     f.close()
     c_group = c_pattern.findall(str)
     functions = func_list(c_group)
+    functions.set_lines(str)
+    print(functions.names())
+    print(functions.lines())
     return functions
 
 
@@ -35,7 +38,7 @@ def get_cfg_graph(functions):
     graph = gv.AGraph(directed=True)
     for name in functions.names():
         graph.add_node(name)
-    for f in functions:
+    for f in functions.flist:
         flag = False
         for name in functions.names():
             result = f.func.find(name + "(")
