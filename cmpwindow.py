@@ -83,7 +83,7 @@ class Ui_cmpwindow(object):
 
     def retranslateUi(self, cmpwindow):
         _translate = QtCore.QCoreApplication.translate
-        cmpwindow.setWindowTitle(_translate("cmpwindow", "Form"))
+        cmpwindow.setWindowTitle(_translate("cmpwindow", "样本库比对结果显示"))
         self.label.setText(_translate("cmpwindow", "比对样本库:"))
         self.label_2.setText(_translate("cmpwindow", "目标文件:"))
         self.groupBox.setTitle(_translate("cmpwindow", "比对结果"))

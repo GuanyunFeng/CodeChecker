@@ -2,7 +2,7 @@ import re
 import sys
 from abc import *
 
-class parameter():
+class variables:
     __metaclass__ = ABCMeta
 
 
@@ -39,24 +39,47 @@ class parameter():
 
 
 
-class para_pointer(parameter):
+class var_pointer(variables):
     def __init__(self, typename, name):
-        super(para_pointer, self).__init__(self.typename, name)
+        super(var_pointer, self).__init__(typename, name)
         self.addr = -1 #-1代表指针未初始化， 0代表空指针， 1代表指向已分配空间
         self.size_total = -1 #指向区域的总大小
         self.count = -1  #单元数量
+        self.value_len = -1
+        self.value = []
+        self.is_on_heap = False
 
 
-    def set_null(self):
-        self.addr = 0
+    def copy_array(self, string):
+        if len(string) + 1 > self.length:
+            if self.is_on_heap:
+                print("heap overflow!")
+            else:
+                print("stack overflow!")
+            return False
+        else:
+            self.value = list(string)
+            self.value_len = len(string)
+            return True
+
+    
+    def append_array(self, string):
+        if len(string) + len(self.value) + 1 > self.length:
+            if self.is_on_heap:
+                print("heap overflow!")
+            else:
+                print("stack overflow!")
+            return False
+        else:
+            self.value = self.value + list(string)
+            self.valid_len += len(string)
+            return True
 
 
-    def set_addr(self):
-        self.addr = 1
-
-
-    def free_addr(self):
-        sefl.addr = -1
+    def set_value(self, ls):
+        self.value.clear()
+        self.value = list(ls)
+        self.value_len = len(self.value)
 
 
     def set_len(self, len):
@@ -71,21 +94,41 @@ class para_pointer(parameter):
             self.count = self.size_total/self.size
 
 
+    def set_null(self):
+        self.addr = 0
+
+
+    def set_addr(self):
+        self.addr = 1
+
+
+    def free_addr(self):
+        self.addr = -1
+
+
     def is_null(self):
         if self.addr == 0:
             return True
+        return False
 
 
     def is_initialized(self):
         if self.addr == -1:
             return True
+        return False
+
+
+    def has_value(self):
+        if self.value_len == -1:
+            return False
+        return True
 
 
 
 
-class pare_num(parameter):
+class var_num(variables):
     def __init__(self, typename, name):
-        super(pare_num, self).__init__(typename, name)
+        super(var_num, self).__init__(typename, name)
         self.value = 0
         self.is_signed = True
         self.max = 0
@@ -102,7 +145,7 @@ class pare_num(parameter):
         else:
             self.is_signed = True
             self.min = - pow(2, self.size * 8 - 1) + 1
-            self.max = pow(2, sefl.size * 8 -1) - 1
+            self.max = pow(2, self.size * 8 -1) - 1
 
 
     def set_value(self, num):
@@ -110,53 +153,29 @@ class pare_num(parameter):
             return False
         self.value = num
         False
-            
-
-
-
-class para_array(para_pointer):
-    def __init__(self, typename, name):
-        super(para_array, self).__init__(typename, name)
-        self.value = []
-        self.is_on_heap = False
 
 
 
 
-class para_string(para_array):
-    def __init__(self, typename, name):
-        super(para_string, self).__init__(typename, name)
-        self.valid_len = 0
-        self.size = 1
-        self.size_total = -1 #对于字符串，size_total与length含义相同，不使用这一属性
+class var_list:
+    def __init__(self):
+        self.num_vars = []
+        self.array_vars = []
+
+    def clear_num_vars(self):
+        self.num_vars.clear()
     
+    def clear_array_vars(self):
+        self.array_vars.clear()
 
-    def set_length(self, len):
-        self.length = len
+    def append_num_var(self, num_var):
+        self.num_vars.append(num_var)
 
+    def append_array_var(self, p_var):
+        self.array_vars.append(p_var)
 
-    def cpy_string(self, string):
-        if len(string) + 1 > self.length:
-            if self.is_on_heap:
-                print("heap overflow!")
-            else:
-                print("stack overflow!")
-            return False
-        else:
-            self.value = list(string)
-            self.valid_len = len(string)
-            return True
-
-    
-    def cat_string(self, string):
-        if len(string) + len(self.value) + 1 > self.length:
-            if self.is_on_heap:
-                print("heap overflow!")
-            else:
-                print("stack overflow!")
-            return False
-        else:
-            self.value = self.value + list(string)
-            self.valid_len += len(string)
-            return True
-
+    def search_array_var(self, name):
+        for var in self.array_vars:
+            if var.name == name:
+                return var
+        return None

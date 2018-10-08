@@ -7,7 +7,7 @@ import pygraphviz as gv
 import difflib
 from .function import *
 
-c_pattern = re.compile(r'((?:const[ \t\*]+)?(void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{[^{}]*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})', re.S)
+c_pattern = re.compile(r'(((?:const[ \t\*]+)?(void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{[^{}]*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\}))', re.S)
 
 '''
     input:
@@ -22,8 +22,6 @@ def get_c_functions(filepath):
     c_group = c_pattern.findall(str)
     functions = func_list(c_group)
     functions.set_lines(str)
-    print(functions.names())
-    print(functions.lines())
     return functions
 
 
@@ -49,6 +47,33 @@ def get_cfg_graph(functions):
     graph.draw("tmp/cfg.png")
 
 
+def get_sub_list(fname, functions):
+    flag = False
+    sub_list = []
+    for f in functions.flist:
+        if f.name == fname:
+            func = f.func
+            flag = True
+            break
+    if flag == False:
+        return None
+    else:
+        count = 0
+        for name in functions.names():
+            result = func.find(name)
+            if result != -1:
+                count += 1
+                sub_list.append(count)
+                sub_list.extend(get_sub_list(name,functions))
+    return sub_list
+
+
+def get_cfg_list(functions):
+    cfg_list = []
+    cfg_list = get_sub_list("main", functions)
+    return cfg_list
+
+
 def get_sub_tree(func_name, names, functions):
     tree = []
     #tree.append(func_name)
@@ -72,22 +97,12 @@ def get_cfg_tree(group):
     return tree
 
 
-def tree_to_list(tree, list):
-    size = len(tree)
-    list.append(size)
-    for i in range(size):
-        tree_to_list(tree[i], list)
-
-
-def cmp_cfg_tree(tree1, tree2):
+def cmp_cfg(functions1, functions2):
     list1 = []
     list2 = []
-    tree_to_list(tree1, list1)
-    tree_to_list(tree2, list2)
-    print(list1)
-    print(list2)
+    list1 = get_cfg_list(functions1)
+    list2 = get_cfg_list(functions2)
     matcher = difflib.SequenceMatcher(None, list1, list2).ratio()
-    print(matcher)
     return matcher    
 
 

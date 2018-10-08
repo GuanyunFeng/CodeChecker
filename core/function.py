@@ -1,6 +1,6 @@
 import re
 import sys
-from .para_types import *
+from .var_types import *
 
 class function:
     def __init__(self, func_all, ret_type, func_name, func):
@@ -20,6 +20,9 @@ class function:
         if count != -1:
             result = enter.findall(txt[:count])
             self.line = len(result) + 1
+        print(self.name)
+        print(self.line)
+        print("")
 
 
 
@@ -28,7 +31,7 @@ class func_list:
     def __init__(self, group):
         self.flist = []
         for g in group:
-            f = function(g[0], g[1], g[2], g[4])
+            f = function(g[0], g[2], g[3], g[5])
             self.flist.append(f)
     
     def names(self):

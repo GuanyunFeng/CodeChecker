@@ -11,7 +11,7 @@ def file_cmp(path1, path2):
     
     file1_line = open(path1).readlines()
     file2_line = open(path2).readlines()
-    f = open(filename1 + "_" + filename2 + "_cmp.html", 'w')
+    f = open("tmp/"+filename1 + "_" + filename2 + "_cmp.html", 'w')
     d = difflib.HtmlDiff()
     f.write(d.make_file(file1_line,file2_line))
     f.close()
