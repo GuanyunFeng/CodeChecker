@@ -22,11 +22,11 @@ def get_c_functions(filepath):
     return functions
 
 
-def check_num_overflow(functions):
+def check_num_overflow(function):
     pass
 
 
-def check_stack_overflow(functions):
+def check_stack_overflow(function):
     pass
 
 
@@ -34,7 +34,7 @@ def check_heap_overflow(function):
     pass
 
 
-def scan_suspicious(function):
+def scan_suspicious(function, global_vars, local_vars):
     print("开始函数内可疑函数的扫描...", function.name)
     level1 = ["gets"]
     level2 = ["strcpy", "memcpy", "strcat",
@@ -42,7 +42,10 @@ def scan_suspicious(function):
             "fscanf", "vfscanf", "vscanf", "vsscanf"]
     level3 = ["getchar", "fgetc", "getc", "fgets",
             "strncpy", "memcpy", "memncpy", "strncat"]
-    key_words = level1.extend(level2).enxtend(level3)
+    key_words = []
+    key_words.extend(level1)
+    key_words.extend(level2)
+    key_words.extend(level3)
     enter = re.compile(r'\n')
     for word in key_words:
         #print("正在寻找不安全的函数"+word+"...")
@@ -54,17 +57,82 @@ def scan_suspicious(function):
                 tmp = enter.findall(function.func[:result])
                 line = function.line + len(tmp) + 1
                 if word in level1:
-                    print("极危险： "+word+" 行数：" + str(line))
+                    print(function.line)
+                    print(line)
+                    print("极危险： "+word+" 行数：" + str(line+function.line))
                 elif word in level2:
-                    print("较危险： "+word+" 行数：" + str(line))
+                    print(function.line)
+                    print(line)
+                    print("较危险： "+word+" 行数：" + str(line+function.line))
                 elif word in level2:
-                    print("较危险： "+word+" 行数：" + str(line))
+                    print("低危险： "+word+" 行数：" + str(line+function.line))
+            if word == "strcpy":
+                pa = re.compile(r'\((.+?)\,(.+?)\)')
+                r = pa.findall(sentence)
+                check_strcpy(r[0][0], r[0][1], global_vars, local_vars)
+                #print(r)
+
+
+def check_strcpy(p1 , p2, global_vars, local_vars):
+    len1 = -1
+    len2 = -1
+    str_pattern = re.compile("\"(.*?)\"")
+    r = str_pattern.findall(p2)
+    if len(r) != 0:
+        len2 = len(r[0]) + 1
+        print(len2)
+
+    result1 = local_vars.search_array_var(p1)
+    if result1 != None:
+        print("find")
+        if result1.count == -1:
+            print("未初始化的变量"+p1)
+        else:
+            len1 = result1.count
+    else:
+        result1 = global_vars.search_array_var(p1)
+        if result1 != None:
+            print("find")
+            if result1.count == -1:
+                print("未初始化的变量"+p1)
+            else:
+                len1 = result.count
+
+    result = local_vars.search_array_var(p2)
+    if result != None:
+        if result.count == -1:
+            print("find")
+            print("未初始化的变量"+p2)
+        else:
+            len2 = result.count
+    else:
+        result = global_vars.search_array_var(p2)
+        if result != None:
+            print("find")
+            if result.count == -1:
+                print("未初始化的变量"+p2)
+            else:
+                len2 = result.count
+    
+    if len1 == -1 or len2 == -1:
+        print("错误的参数！")
+        return False
+
+    if len1 < len2:
+        if result1.is_on_heap:
+            print("堆溢出！")
+        else:
+            print("栈溢出！")
+        return False
+        
+
+    
+
 
 
 def scan_global_var(code):
-    global_vars = []
     code = re.sub(c_pattern, "", code)
-    global_vars = scan_local_var(scan_global_var)
+    global_vars = scan_local_var(code)
     return global_vars
 
 
@@ -97,13 +165,9 @@ def scan_local_var(function):
                 if para[2] != "":
                     tmp_var.set_len(int(para[2]))
                 if para[3] != "":
-                    tmp_var.set_len(len(para[3])+1)
+                    if para[2] == "":
+                        tmp_var.set_len(len(para[3])+1)
                     tmp_var.set_value(list(para[3]))
-                print(tmp_var.type_name)
-                print(tmp_var.name)
-                print(tmp_var.count)
-                print(tmp_var.value)
-                print("")
                 local_vars.append_array_var(tmp_var)
 
             for para in parameters2:
@@ -113,13 +177,9 @@ def scan_local_var(function):
                 if para[2] != "":
                     tmp_var.set_len(int(para[2]))
                 if para[3] != "":
-                    tmp_var.set_len(len(para[3])+1)
+                    if para[2] == "":
+                        tmp_var.set_len(len(para[3])+1)
                     tmp_var.set_value(list(para[3]))
-                print(tmp_var.type_name)
-                print(tmp_var.name)
-                print(tmp_var.count)
-                print(tmp_var.value)
-                print("")
                 local_vars.append_array_var(tmp_var)
 	
 	    #获取var类型变量
@@ -165,25 +225,11 @@ def scan_local_var(function):
             for para in parameters6:
                 tmp_var = var_pointer(var_type, para[0])
                 local_vars.append_array_var(tmp_var)
-'''
-    for l1 in local_vars.num_vars:
-        print(l1.type_name)
-        print(l1.name)
-        print(l1.value)
-        print("")
 
-    for l2 in local_vars.array_vars:
-        print(l1.type_name)
-        print(l1.name)
-        #print(l1.count)
-        print(l1.value)
-        print("")
-'''
-'''
-	#获取malloc分配空间
-	    malloc_space="([\w_]+)\={1}\({1}"+var_type+"[ \t]*\*[ \t]*\){1}[ \t]*malloc[ \t]*\({1}[ \t]*([\d]+)[ \t]*\*{1}[ \t]*sizeof\({1}"+var_type+"\){2}"
-	    para_pattern7 = re.compile(malloc_space)
-	    malloc=para_pattern7.findall(function)
+        malloc_pat = re.compile("([\w_]+)[ \t]*\=[ \t]*{1}(?:\({1}"+var_type+"[ \t]*\*[ \t]*\))?{1}[ \t]*malloc[ \t]*\({1}[ \t]*([\d]+)[ \t]*\*{1}[ \t]*sizeof\({1}"+var_type+"\){2}")
+	    malloc=malloc_pat.findall(function)
 	    for pointer in malloc:
-	        var_pointer[pointer[0]]=pointer[1]
-'''
+            r = local_vars.search_array_var(pointer[0])
+            if r != None:
+                r.set_len(int(pointer[1]))
+    return local_vars

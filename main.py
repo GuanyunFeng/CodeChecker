@@ -111,7 +111,7 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
         pass
 
     
-    def show_big_png(self):
+    def show_big_png(self):   
         self.w = picviewer('./tmp/cfg.png')
         self.w.show()
 
@@ -166,10 +166,14 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     
     def check_all(self):
+        with open(self.target_dir + '/' + self.target_filename,'r') as f:
+            str=f.read()
+            global_vars = scan_global_var(str)
+            print(global_vars)
         for f in self.functions.flist:
             print(f.name)
-            scan_local_var(f.func)
-            #scan_suspicious(f)
+            local_vars = scan_local_var(f.func)
+            scan_suspicious(f, global_vars, local_vars)
 
 
 app = QtWidgets.QApplication(sys.argv)
