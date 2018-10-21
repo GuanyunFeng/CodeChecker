@@ -20,9 +20,15 @@ def hamming_distance(s1, s2):
 
 
 #使用numpy计算余弦相似度
-def Cosine(vec1, vec2):
-    npvec1, npvec2 = np.array(vec1), np.array(vec2)
-    return npvec1.dot(npvec2)/(math.sqrt((npvec1**2).sum()) * math.sqrt((npvec2**2).sum()))
+def cos_sim(s1, s2):
+    s1 = np.mat(s1) 
+    s2 = np.mat(s2)
+    num = float(s1 * s2.T)
+    denom = np.linalg.norm(s1) * np.linalg.norm(s2)
+    cos = num / denom
+    sim = 0.5 + 0.5 * cos
+    return sim
+
 
 
 #计算字符串编辑距离
