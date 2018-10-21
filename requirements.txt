@@ -1,0 +1,4 @@
+pygraphviz==1.3
+graphviz==0.9
+python_Levenshtein==0.12.0
+PyQt5==5.11.3

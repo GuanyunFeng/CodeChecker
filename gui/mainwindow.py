@@ -7,8 +7,8 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mylabel import myLabel
-from mytreeview import myTreeview
+from .mylabel import myLabel
+from .mytreeview import myTreeview
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -110,6 +110,8 @@ class Ui_MainWindow(object):
         self.action_samep.setObjectName("action_samep")
         self.action_checkall = QtWidgets.QAction(MainWindow)
         self.action_checkall.setObjectName("action_checkall")
+        self.action_checkdir = QtWidgets.QAction(MainWindow)
+        self.action_checkdir.setObjectName("action_checkdir")
         self.menu.addAction(self.action_open)
         self.menu.addAction(self.action_close)
         self.menu.addAction(self.action_save)
@@ -127,6 +129,7 @@ class Ui_MainWindow(object):
         self.menua.addAction(self.action_nullp)
         self.menua.addAction(self.action_samep)
         self.menua.addAction(self.action_checkall)
+        self.menua.addAction(self.action_checkdir)
         self.menuBar.addAction(self.menu.menuAction())
         self.menuBar.addAction(self.menu_2.menuAction())
         self.menuBar.addAction(self.menua.menuAction())
@@ -137,7 +140,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "CodeCheker"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "检测输出"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", " 终端shell"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "cfg图"))
@@ -161,4 +164,5 @@ class Ui_MainWindow(object):
         self.action_nullp.setText(_translate("MainWindow", "空指针引用检测"))
         self.action_samep.setText(_translate("MainWindow", "竞争引用检测"))
         self.action_checkall.setText(_translate("MainWindow", "全部检测"))
+        self.action_checkdir.setText(_translate("MainWindow", "检测文件夹"))
 

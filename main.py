@@ -2,18 +2,35 @@
 
 
 import sys
+import re
+import threading
+from time import ctime,sleep
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from mainwindow import Ui_MainWindow
-from viewpic import Ui_ViewPic
-from cmpwindow import Ui_cmpwindow
+from gui.mainwindow import Ui_MainWindow
+from gui.viewpic import Ui_ViewPic
+from gui.cmpwindow import Ui_cmpwindow
 from core.pre_compile import *
 from core.compare_str import *
 from core.compare_cfg import *
 from core.analysis import *
 #from core.function import *
 #from core.para_types import *
+
+class MyThread(threading.Thread):
+    def __init__(self, func, args, name):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.func = func
+        self.args = args
+        self.result = self.func(*self.args)
+ 
+    def get_result(self):
+        try:
+            return self.result
+        except Exception:
+            return None
 
 class cmpwindow(QtWidgets.QWidget, Ui_cmpwindow):
     def __init__(self):
@@ -74,7 +91,12 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.action_samples.triggered.connect(self.open_dir)
         self.action_cmp_str.triggered.connect(self.cmp_str)
         self.action_cmp_cfg.triggered.connect(self.cmp_cfg)
+        self.action_nullp.triggered.connect(self.check_nullp)
+        self.action_int_width.triggered.connect(self.check_num)
+        self.action_heap.triggered.connect(self.check_heap_overflow)
+        self.action_stack.triggered.connect(self.check_stack_overflow)
         self.action_checkall.triggered.connect(self.check_all)
+        self.action_checkdir.triggered.connect(self.check_dir)
         self.viewer.clicked.connect(self.show_big_png)
 
 
@@ -88,8 +110,6 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
             get_cfg_graph(self.functions)
             self.target_filename = get_filename2(filename)
             self.target_dir = get_file_dir(filename)
-            print(self.target_filename)
-            print(self.target_dir)
         if QFile.exists("./tmp/cfg.png"):
             png=QtGui.QPixmap('./tmp/cfg.png')
             self.viewer.setScaledContents(True)
@@ -97,7 +117,6 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self.w = picviewer('./tmp/cfg.png')
             self.w.show()
             self.tabWidget.setCurrentIndex(2)
-    
 
     def close_file(self):
         self.viewer.clear()
@@ -118,6 +137,7 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def cmp_str(self):
         match_dict = {}
+        threads = []
         self.w = cmpwindow()
         self.w.show()
         self.w.set_list(self.sample_filenames)
@@ -125,9 +145,17 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
         path1 = self.target_dir + '/' + self.target_filename #目标文件
         for file in self.sample_filenames:
             path2 = self.sample_dir + '/' + file #比较的目标文件
-            matcher = file_cmp(path1, path2)
-            match_dict[file] = matcher
+            t = MyThread(file_cmp,(path1,path2,), file)
+            threads.append(t)
+        for i in range(len(self.sample_filenames)):
+            threads[i].start()     
+        for i in range(len(self.sample_filenames)):
+            threads[i].join()
+            match_dict[threads[i].name] = threads[i].get_result()
+            print("比较完成"+threads[i].name+"!")
         sorted_dict = sorted(match_dict.items(), key = lambda k: k[1])
+        for d in sorted_dict:
+            print(d[0] + ":  " + str(d[1]*100) + "%")
         self.w.set_file1(sorted_dict[-1][0])
         self.w.set_simi1(str(sorted_dict[-1][1]*100) + "%")
         html = "tmp/"+self.target_filename.split('.')[0] + "_"+sorted_dict[-1][0].split('.')[0]+"_cmp.html"
@@ -135,6 +163,7 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
 
     def cmp_cfg(self):
+        threads = []
         match_dict = {}
         self.w = cmpwindow()
         self.w.show()
@@ -145,13 +174,14 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
         for file in self.sample_filenames:
             path2 = self.sample_dir + '/' + file #比较的目标文件
             functions2 = get_c_functions(path2)
-            matcher = cmp_cfg(functions1, functions2)
-            match_dict[file] = matcher
+            match_dict[file] = cfg_cmp(functions1,functions2)
         sorted_dict = sorted(match_dict.items(), key = lambda k: k[1])
+        for d in sorted_dict:
+            print(d[0] + ":  " + str(d[1]*100) + "%")
         self.w.set_file1(sorted_dict[-1][0])
         self.w.set_simi1(str(sorted_dict[-1][1]*100) + "%")
-        self.w.set_file2(sorted_dict[1][0])
-        self.w.set_simi2(str(sorted_dict[1][1]*100) + "%")
+        self.w.set_file2(sorted_dict[0][0])
+        self.w.set_simi2(str(sorted_dict[0][1]*100) + "%")
 
 
 
@@ -161,19 +191,100 @@ class mywindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.sample_dir = dir_path
         c_file_types = ["c","C", "cpp","CPP"]
         self.sample_filenames = get_filenames(dir_path, c_file_types)
-        print(self.sample_dir)
-        print(self.sample_filenames)
 
-    
-    def check_all(self):
+
+    def check_heap_overflow(self):
+        self.tabWidget.setCurrentIndex(0)
+        self.output.document().setMaximumBlockCount(100)
+        self.output.append("正在进行堆栈溢出检测...")
         with open(self.target_dir + '/' + self.target_filename,'r') as f:
             str=f.read()
             global_vars = scan_global_var(str)
             print(global_vars)
         for f in self.functions.flist:
-            print(f.name)
             local_vars = scan_local_var(f.func)
-            scan_suspicious(f, global_vars, local_vars)
+            out = scan_suspicious(f, global_vars, local_vars)
+            self.output.document().setMaximumBlockCount(100)
+            self.output.append(out)
+
+
+    def check_stack_overflow(self):
+        self.tabWidget.setCurrentIndex(0)
+        self.output.document().setMaximumBlockCount(100)
+        self.output.append("正在进行堆栈溢出检测...")
+        with open(self.target_dir + '/' + self.target_filename,'r') as f:
+            str=f.read()
+            global_vars = scan_global_var(str)
+            print(global_vars)
+        for f in self.functions.flist:
+            local_vars = scan_local_var(f.func)
+            out = scan_suspicious(f, global_vars, local_vars)
+            self.output.document().setMaximumBlockCount(100)
+            self.output.append(out)
+            
+
+    def check_nullp(self):
+        for f in self.functions.flist:
+            local_vars = scan_local_var(f.func)
+            out = scan_nullp(f, local_vars)
+            self.output.document().setMaximumBlockCount(100)
+            self.output.append(out)
+
+    def check_num(self):
+        for f in self.functions.flist:
+            local_vars = scan_local_var(f.func)
+            out = scan_num_overflow(f, local_vars)
+            self.output.document().setMaximumBlockCount(100)
+            self.output.append(out)
+    
+    def check_all(self):
+        self.tabWidget.setCurrentIndex(0)
+        self.check_stack_overflow()
+        self.check_num()
+        self.check_nullp()
+
+    def check_dir(self):
+        dir_path = QFileDialog.getExistingDirectory(self,"choose directory",".")
+        c_file_types = ["c","C", "cpp","CPP", "h", "hpp"]
+        filenames = get_filenames(dir_path, c_file_types)
+        for file in filenames:
+            path = dir_path + '/' + file #比较的目标文件
+            self.check_file(path)
+
+    def check_file(self,path):
+        out = "正在扫描文件："+path
+        functions = get_c_functions(path)
+        self.tabWidget.setCurrentIndex(0)
+        self.output.document().setMaximumBlockCount(100)
+        with open(path,'r') as fp:
+            str=fp.read()
+            global_vars = scan_global_var(str)
+        self.output.append("正在进行堆栈溢出检测...")
+        out += "正在进行堆栈溢出检测..."
+        for f in functions.flist:
+            local_vars = scan_local_var(f.func)
+            out += scan_suspicious(f, global_vars, local_vars)
+            self.output.document().setMaximumBlockCount(100)
+            self.output.append(out)
+        self.output.document().setMaximumBlockCount(100)
+        self.output.append("正在进行空指针检测...")
+        out += "正在进行空指针检测..."
+        for f in functions.flist:
+            local_vars = scan_local_var(f.func)
+            out += scan_nullp(f, local_vars)
+            self.output.document().setMaximumBlockCount(100)
+            self.output.append(out)
+        self.output.document().setMaximumBlockCount(100)
+        self.output.append("正在进行整数宽度溢出检测...")
+        out += "正在进行整数宽度溢出检测..."
+        for f in functions.flist:
+            local_vars = scan_local_var(f.func)
+            out += scan_num_overflow(f, local_vars)
+            self.output.document().setMaximumBlockCount(100)
+            self.output.append(out)
+        
+        with open(path+".log", "w") as fp:
+            fp.write(out)
 
 
 app = QtWidgets.QApplication(sys.argv)

@@ -179,3 +179,9 @@ class var_list:
             if var.name == name:
                 return var
         return None
+
+    def search_num_var(self, name):
+        for var in self.num_vars:
+            if var.name == name:
+                return var
+        return None

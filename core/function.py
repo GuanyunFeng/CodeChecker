@@ -20,9 +20,6 @@ class function:
         if count != -1:
             result = enter.findall(txt[:count])
             self.line = len(result) + 1
-        print(self.name)
-        print(self.line)
-        print("")
 
 
 

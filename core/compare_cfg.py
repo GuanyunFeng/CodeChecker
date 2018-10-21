@@ -7,7 +7,7 @@ import pygraphviz as gv
 import difflib
 from .function import *
 
-c_pattern = re.compile(r'(((?:const[ \t\*]+)?(void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{[^{}]*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\}))', re.S)
+c_pattern = re.compile(r'(((?:const[ \t\*]+)?(void|int|char|long|double|float|unsigned|unsigned int|unsigned long|long long)[ \t\*]+(?:const[ \t*]+)?)(\w+)(\([^\;]*\))[^\;]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{([^{}]*(\{.*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\})*[^\{\}]*?)*\}))', re.S)
 
 '''
     input:
@@ -47,7 +47,7 @@ def get_cfg_graph(functions):
     graph.draw("tmp/cfg.png")
 
 
-def get_sub_list(fname, functions):
+def get_sub_list(fname, functions,deep):
     flag = False
     sub_list = []
     for f in functions.flist:
@@ -63,14 +63,18 @@ def get_sub_list(fname, functions):
             result = func.find(name)
             if result != -1:
                 count += 1
+                deep += 1
                 sub_list.append(count)
-                sub_list.extend(get_sub_list(name,functions))
+                if deep > 50:
+                    return sub_list
+                sub_list.extend(get_sub_list(name,functions,deep))
     return sub_list
 
 
 def get_cfg_list(functions):
     cfg_list = []
-    cfg_list = get_sub_list("main", functions)
+    deep = 0
+    cfg_list = get_sub_list("main", functions, deep)
     return cfg_list
 
 
@@ -97,7 +101,7 @@ def get_cfg_tree(group):
     return tree
 
 
-def cmp_cfg(functions1, functions2):
+def cfg_cmp(functions1, functions2):
     list1 = []
     list2 = []
     list1 = get_cfg_list(functions1)

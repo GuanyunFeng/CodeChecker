@@ -6,9 +6,13 @@ int hhhhh[32];
 
 int main(){
     char p0[45] = "dsaadsf", p1[] = "dsafas", p2[10];
+    char * ppp = (char*)malloc(14*sizeof(char));
+    int *aaa, *fff;
     int b;
+    fff = b;
     unsigned short c = 222;
-    strcpy(p2, "asdfasdfasdfasdf");
+    c = b;
+    strcpy(ppp, "asdfasdfasdfasdf");
     b = 43;
     return 0;
 }

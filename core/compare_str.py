@@ -3,7 +3,53 @@
 import sys
 import os
 import difflib
+import Levenshtein
+import numpy as np
 #from pre_compile import *
+
+
+def jaccard(p,q):
+    c = [a for i in p if v in b]
+    return float(len(c))/(len(a)+len(b)-len(b))
+
+
+#计算海明距离
+def hamming_distance(s1, s2):
+    assert len(s1) == len(s2)
+    return sum(ch1 != ch2 for ch1, ch2 in zip(s1, s2))
+
+
+#使用numpy计算余弦相似度
+def Cosine(vec1, vec2):
+    npvec1, npvec2 = np.array(vec1), np.array(vec2)
+    return npvec1.dot(npvec2)/(math.sqrt((npvec1**2).sum()) * math.sqrt((npvec2**2).sum()))
+
+
+#计算字符串编辑距离
+def levenshtein_edit(source, target):
+    if len(s1) < len(s2):
+        return levenshtein2(s2, s1)
+    if len(s2) == 0:
+        return len(s1)
+        
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+    
+    return previous_row[-1]
+
+
+#计算莱文斯坦比
+def levenshtein_ratio(source, target):
+    sum = len(source) + len(target)
+    ld = levenshtein_edit(source, target)
+    return (sum - ld)/sum
 
 def file_cmp(path1, path2):
     filename1 = get_filename(path1)
@@ -11,11 +57,20 @@ def file_cmp(path1, path2):
     
     file1_line = open(path1).readlines()
     file2_line = open(path2).readlines()
+    str1 = open(path1).read()
+    str2 = open(path2).read()
     f = open("tmp/"+filename1 + "_" + filename2 + "_cmp.html", 'w')
     d = difflib.HtmlDiff()
     f.write(d.make_file(file1_line,file2_line))
     f.close()
     matcher = difflib.SequenceMatcher(None, file1_line, file2_line).ratio()
+    # 计算莱文斯坦比
+    sim2 = Levenshtein.ratio(str1, str2)
+    # 计算jaro距离 
+    sim3 = Levenshtein.jaro(str1, str2 )
+     # Jaro–Winkler距离 
+    sim4 = Levenshtein.jaro_winkler(str1 , str2)
+    matcher = matcher*0.25 + sim2*0.25 + sim3*0.25 + sim4*0.25
     return matcher
 
 '''
